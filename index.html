@@ -654,7 +654,8 @@ async function exportProfileToPDF(profile) {
         };
 
         // 5. Xuất file PDF
-        pdfMake.createPdf(docDefinition).download(`profile_${profile.id}.pdf`);
+	const filename = `${profile.name.replace(/\s/g, '')}_${profile.age}.pdf`;
+	pdfMake.createPdf(docDefinition).download(filename);
         showMessage("Xuất PDF thành công!");
     } catch (error) {
         console.error("Export PDF failed:", error);
@@ -901,6 +902,7 @@ async function exportProfileToPDF(profile) {
 
 </body>
 </html>
+
 
 
 
