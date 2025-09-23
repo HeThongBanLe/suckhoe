@@ -395,7 +395,12 @@
                 showMessage("Vui lòng chọn một hồ sơ trước.");
                 return;
             }
-
+                 // ✅ Kiểm tra ngày
+            const dateValue = document.getElementById('health-date').value;
+            if (!dateValue) {
+              showMessage("Vui lòng chọn ngày trước khi lưu dữ liệu.");
+              return;
+             }
             const healthData = {
                 date: document.getElementById('health-date').value,
                 weight: parseFloat(document.getElementById('health-weight').value) || null,
@@ -958,4 +963,5 @@ async function exportProfileToPDF(profile) {
 
 </body>
 </html>
+
 
