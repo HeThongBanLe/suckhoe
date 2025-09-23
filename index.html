@@ -107,7 +107,7 @@
                 loginForm.classList.add('hidden');
                 mainHeader.classList.remove('hidden'); 
                 mainContent.classList.remove('hidden');
-                userEmailDisplay.textContent = user.email;
+              
 
                 // Show admin button for a specific user
                 if (user.email === 'admin@myapp.com') {
@@ -247,6 +247,12 @@
                             <p><strong>Nơi ở:</strong> ${profile.address}</p>
                             <p><strong>Ghi chú:</strong> ${profile.notes}</p>
                             <p><strong>Tạo bởi:</strong> ${profile.creatorEmail || 'N/A'}</p>
+			    <p><strong>Ngày tạo:</strong> ${profile.createdAt 
+                 	    ? (profile.createdAt.toDate 
+     			    ? profile.createdAt.toDate().toLocaleDateString('vi-VN') 
+     		            : new Date(profile.createdAt).toLocaleDateString('vi-VN')) 
+    			    : 'N/A'}</p>
+
                         </div>
                     </div>
                     <div class="flex justify-end space-x-2 mt-4">
@@ -351,6 +357,19 @@
                 } finally {
                     showLoading(false);
                     profileToDeleteId = null;
+		    // Sau khi xóa xong
+			healthDataSection.classList.add('hidden');
+			healthDataForm.reset();
+			healthDataList.innerHTML = '';
+			chartsSection.classList.add('hidden');
+			currentProfileId = null;
+
+			// Hủy luôn các chart nếu đang có
+			if (bpChartInstance) bpChartInstance.destroy();
+			if (heartRateChartInstance) heartRateChartInstance.destroy();
+			if (sleepChartInstance) sleepChartInstance.destroy();
+			if (stepsChartInstance) stepsChartInstance.destroy();
+			if (weightChartInstance) weightChartInstance.destroy();
                 }
             }
         });
@@ -739,17 +758,17 @@ async function exportProfileToPDF(profile) {
 </head>
 <body class="bg-gray-100 min-h-screen font-sans antialiased text-gray-800">
     <!-- Header chính (chỉ hiển thị khi đã đăng nhập) -->
-    <header id="main-header" class="hidden fixed top-0 left-0 w-full bg-indigo-600 text-white shadow-md p-4 z-10">
-        <div class="container mx-auto flex items-center justify-between flex-wrap">
-            <span id="user-email-display" class="text-lg font-bold mr-4"></span>
-            <div class="flex items-center space-x-2 flex-wrap mt-2 sm:mt-0">
-                <button id="add-profile-btn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">Thêm Hồ Sơ</button>
-                <button id="change-password-btn" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">Đổi Mật Khẩu</button>
-                <button id="logout-btn" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Đăng Xuất</button>
-                <button id="add-user-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300 hidden">Thêm Tài Khoản</button>
-            </div>
+<header id="main-header" class="hidden fixed top-0 left-0 w-full bg-indigo-600 text-white shadow-md p-2 z-10">
+    <div class="container mx-auto flex items-center justify-end">
+        <div class="flex items-center space-x-2 mt-0 whitespace-nowrap">
+            <button id="add-profile-btn" class="bg-blue-500 text-white font-bold py-1 px-2 text-sm rounded-lg hover:bg-blue-600 transition">Thêm Hồ Sơ</button>
+            <button id="change-password-btn" class="bg-yellow-500 text-white font-bold py-1 px-2 text-sm rounded-lg hover:bg-yellow-600 transition">Đổi Mật Khẩu</button>
+            <button id="logout-btn" class="bg-red-500 text-white font-bold py-1 px-2 text-sm rounded-lg hover:bg-red-600 transition">Đăng Xuất</button>
+            <button id="add-user-btn" class="bg-green-500 text-white font-bold py-1 px-2 text-sm rounded-lg hover:bg-green-600 transition hidden">Thêm Tài Khoản</button>
         </div>
-    </header>
+    </div>
+</header>
+
 
     <div class="w-full max-w-7xl mx-auto p-4 md:p-8 mt-16">
         <!-- Biểu mẫu đăng nhập -->
@@ -786,40 +805,52 @@ async function exportProfileToPDF(profile) {
                 </button>
             </div>
             
-            <!-- Form nhập liệu -->
-            <form id="health-data-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="health-date" class="block text-gray-700 font-medium mb-1">Ngày</label>
-                    <input type="date" id="health-date" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
-                </div>
-                <div>
-                    <label for="health-weight" class="block text-gray-700 font-medium mb-1">Cân nặng (kg)</label>
-                    <input type="number" id="health-weight" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., 65">
-                </div>
-                <div>
-                    <label for="health-bp" class="block text-gray-700 font-medium mb-1">Huyết áp</label>
-                    <input type="text" id="health-bp" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., 120/80">
-                </div>
-                <div>
-                    <label for="health-heart-rate" class="block text-gray-700 font-medium mb-1">Nhịp tim (bpm)</label>
-                    <input type="number" id="health-heart-rate" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., 75">
-                </div>
-                <div>
-                    <label for="health-sleep" class="block text-gray-700 font-medium mb-1">Giấc ngủ (giờ)</label>
-                    <input type="number" id="health-sleep" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., 8">
-                </div>
-                <div>
-                    <label for="health-steps" class="block text-gray-700 font-medium mb-1">Bước chân</label>
-                    <input type="number" id="health-steps" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., 10000">
-                </div>
-                <div class="col-span-1 md:col-span-2">
-                    <label for="health-note" class="block text-gray-700 font-medium mb-1">Ghi chú</label>
-                    <textarea id="health-note" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Thêm ghi chú..."></textarea>
-                </div>
-                <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
-                    <button type="submit" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">Lưu</button>
-                </div>
-            </form>
+    <!-- Form nhập liệu -->
+<form id="health-data-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+        <label for="health-date" class="block text-gray-700 font-medium mb-1">Ngày</label>
+        <input type="date" id="health-date" 
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
+    </div>
+    <div>
+        <label for="health-weight" class="block text-gray-700 font-medium mb-1">Cân nặng (kg)</label>
+        <input type="number" id="health-weight" value="65"
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div>
+        <label for="health-bp" class="block text-gray-700 font-medium mb-1">Huyết áp</label>
+        <input type="text" id="health-bp" value="120/80"
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div>
+        <label for="health-heart-rate" class="block text-gray-700 font-medium mb-1">Nhịp tim (bpm)</label>
+        <input type="number" id="health-heart-rate" value="75"
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div>
+        <label for="health-sleep" class="block text-gray-700 font-medium mb-1">Giấc ngủ (giờ)</label>
+        <input type="number" id="health-sleep" value="8"
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div>
+        <label for="health-steps" class="block text-gray-700 font-medium mb-1">Bước chân</label>
+        <input type="number" id="health-steps" value="10000"
+               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div class="col-span-1 md:col-span-2">
+        <label for="health-note" class="block text-gray-700 font-medium mb-1">Ghi chú</label>
+        <textarea id="health-note" rows="3"
+                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="Thêm ghi chú..."></textarea>
+    </div>
+    <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
+        <button type="submit"
+                class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
+            Lưu
+        </button>
+    </div>
+</form>
+
 
             <hr class="my-8">
             
