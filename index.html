@@ -79,7 +79,8 @@
         let currentProfileId = null;
 
         // Chart instances
-        let bpChartInstance, heartRateChartInstance, sleepChartInstance, stepsChartInstance, weightChartInstance;
+        let systolicChartInstance, diastolicChartInstance, heartRateChartInstance, sleepChartInstance, stepsChartInstance, weightChartInstance;
+
 
         // --- Helper Functions ---
         function showLoading(show = true) {
@@ -365,7 +366,9 @@
 			currentProfileId = null;
 
 			// Hủy luôn các chart nếu đang có
-			if (bpChartInstance) bpChartInstance.destroy();
+			if (systolicChartInstance) systolicChartInstance.destroy();
+if (diastolicChartInstance) diastolicChartInstance.destroy();
+
 			if (heartRateChartInstance) heartRateChartInstance.destroy();
 			if (sleepChartInstance) sleepChartInstance.destroy();
 			if (stepsChartInstance) stepsChartInstance.destroy();
@@ -382,7 +385,9 @@
             chartsSection.classList.add('hidden');
             currentProfileId = null;
             // Destroy all charts when closing
-            if (bpChartInstance) bpChartInstance.destroy();
+            if (systolicChartInstance) systolicChartInstance.destroy();
+if (diastolicChartInstance) diastolicChartInstance.destroy();
+
             if (heartRateChartInstance) heartRateChartInstance.destroy();
             if (sleepChartInstance) sleepChartInstance.destroy();
             if (stepsChartInstance) stepsChartInstance.destroy();
@@ -448,7 +453,9 @@
             if (records.length === 0) {
                 healthDataList.innerHTML = '<p class="text-gray-500 text-center">Chưa có dữ liệu sức khỏe nào. Hãy thêm dữ liệu mới!</p>';
                 // Destroy existing charts if there is no data
-                if (bpChartInstance) bpChartInstance.destroy();
+                if (systolicChartInstance) systolicChartInstance.destroy();
+if (diastolicChartInstance) diastolicChartInstance.destroy();
+
                 if (heartRateChartInstance) heartRateChartInstance.destroy();
                 if (sleepChartInstance) sleepChartInstance.destroy();
                 if (stepsChartInstance) stepsChartInstance.destroy();
@@ -490,7 +497,9 @@
             chartsSection.classList.remove('hidden');
 
             // Hủy các biểu đồ cũ để vẽ lại
-            if (bpChartInstance) bpChartInstance.destroy();
+            if (systolicChartInstance) systolicChartInstance.destroy();
+	    if (diastolicChartInstance) diastolicChartInstance.destroy();
+
             if (heartRateChartInstance) heartRateChartInstance.destroy();
             if (sleepChartInstance) sleepChartInstance.destroy();
             if (stepsChartInstance) stepsChartInstance.destroy();
@@ -535,37 +544,70 @@
                 }
             });
 
-            // Vẽ biểu đồ Huyết áp
-            const bpCtx = document.getElementById('bpChart').getContext('2d');
-            bpChartInstance = new Chart(bpCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Tâm thu (Systolic)',
-                        data: systolicData,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1,
-                        fill: false
-                    }, {
-                        label: 'Tâm trương (Diastolic)',
-                        data: diastolicData,
-                        borderColor: 'rgb(255, 99, 132)',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: 'Biểu đồ Huyết áp', font: { size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
-                }
-            });
+
+
+
+
+
+
+
+
+// Biểu đồ Tâm thu (Systolic)
+const systolicCtx = document.getElementById('systolicChart').getContext('2d');
+systolicChartInstance = new Chart(systolicCtx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Tâm thu (Systolic)',
+            data: systolicData,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Biểu đồ Tâm thu', font: { size: 16 } }
+        },
+        scales: { y: { beginAtZero: false } }
+    }
+});
+
+// Biểu đồ Tâm trương (Diastolic)
+const diastolicCtx = document.getElementById('diastolicChart').getContext('2d');
+diastolicChartInstance = new Chart(diastolicCtx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [{
+            label: 'Tâm trương (Diastolic)',
+            data: diastolicData,
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Biểu đồ Tâm trương', font: { size: 16 } }
+        },
+        scales: { y: { beginAtZero: false } }
+    }
+});
+
+
+
+
+
+
+
+
+
 
             // Vẽ biểu đồ Nhịp tim
             const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
@@ -899,8 +941,12 @@ async function exportProfileToPDF(profile) {
                         <canvas id="weightChart"></canvas>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
-                        <canvas id="bpChart"></canvas>
-                    </div>
+    <canvas id="systolicChart"></canvas>
+</div>
+<div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+    <canvas id="diastolicChart"></canvas>
+</div>
+
                     <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
                         <canvas id="heartRateChart"></canvas>
                     </div>
