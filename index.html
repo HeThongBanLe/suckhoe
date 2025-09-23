@@ -367,7 +367,7 @@
 
 			// Hủy luôn các chart nếu đang có
 			if (systolicChartInstance) systolicChartInstance.destroy();
-if (diastolicChartInstance) diastolicChartInstance.destroy();
+                        if (diastolicChartInstance) diastolicChartInstance.destroy();
 
 			if (heartRateChartInstance) heartRateChartInstance.destroy();
 			if (sleepChartInstance) sleepChartInstance.destroy();
@@ -386,7 +386,7 @@ if (diastolicChartInstance) diastolicChartInstance.destroy();
             currentProfileId = null;
             // Destroy all charts when closing
             if (systolicChartInstance) systolicChartInstance.destroy();
-if (diastolicChartInstance) diastolicChartInstance.destroy();
+	    if (diastolicChartInstance) diastolicChartInstance.destroy();
 
             if (heartRateChartInstance) heartRateChartInstance.destroy();
             if (sleepChartInstance) sleepChartInstance.destroy();
@@ -454,7 +454,7 @@ if (diastolicChartInstance) diastolicChartInstance.destroy();
                 healthDataList.innerHTML = '<p class="text-gray-500 text-center">Chưa có dữ liệu sức khỏe nào. Hãy thêm dữ liệu mới!</p>';
                 // Destroy existing charts if there is no data
                 if (systolicChartInstance) systolicChartInstance.destroy();
-if (diastolicChartInstance) diastolicChartInstance.destroy();
+		if (diastolicChartInstance) diastolicChartInstance.destroy();
 
                 if (heartRateChartInstance) heartRateChartInstance.destroy();
                 if (sleepChartInstance) sleepChartInstance.destroy();
@@ -489,204 +489,72 @@ if (diastolicChartInstance) diastolicChartInstance.destroy();
             renderCharts(records);
         }
 
-        function renderCharts(records) {
-            if (records.length < 2) {
-                chartsSection.classList.add('hidden');
-                return;
+
+
+
+function renderCharts(records) {
+    if (records.length < 2) {
+        chartsSection.classList.add('hidden');
+        return;
+    }
+    chartsSection.classList.remove('hidden');
+
+    // Hủy các biểu đồ cũ
+    if (systolicChartInstance) systolicChartInstance.destroy();
+    if (diastolicChartInstance) diastolicChartInstance.destroy();
+    if (heartRateChartInstance) heartRateChartInstance.destroy();
+    if (sleepChartInstance) sleepChartInstance.destroy();
+    if (stepsChartInstance) stepsChartInstance.destroy();
+    if (weightChartInstance) weightChartInstance.destroy();
+
+    // Sắp xếp dữ liệu theo ngày
+    records.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const dates = records.map(r => r.date ? new Date(r.date).toLocaleDateString('vi-VN') : 'N/A');
+    const systolicData = records.map(r => r.bloodPressure ? parseInt(r.bloodPressure.split('/')[0]) : null);
+    const diastolicData = records.map(r => r.bloodPressure ? parseInt(r.bloodPressure.split('/')[1]) : null);
+    const heartRateData = records.map(r => r.heartRate);
+    const sleepData = records.map(r => r.sleep);
+    const stepsData = records.map(r => r.steps);
+    const weightData = records.map(r => r.weight);
+
+    function createLineChart(ctxId, data, color, titleText) {
+        const ctx = document.getElementById(ctxId).getContext('2d');
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    data: data,
+                    borderColor: color,
+                    tension: 0.1,
+                    fill: false
+                    // label: không cần, xóa đi
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }, // tắt label
+                    title: { display: true, text: titleText, font: { size: 16 } }
+                },
+                scales: { y: { beginAtZero: false } }
             }
-            chartsSection.classList.remove('hidden');
-
-            // Hủy các biểu đồ cũ để vẽ lại
-            if (systolicChartInstance) systolicChartInstance.destroy();
-	    if (diastolicChartInstance) diastolicChartInstance.destroy();
-
-            if (heartRateChartInstance) heartRateChartInstance.destroy();
-            if (sleepChartInstance) sleepChartInstance.destroy();
-            if (stepsChartInstance) stepsChartInstance.destroy();
-            if (weightChartInstance) weightChartInstance.destroy();
-
-            // Sắp xếp dữ liệu theo ngày tăng dần để vẽ biểu đồ
-            records.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            // Chuẩn bị dữ liệu cho biểu đồ
-            const dates = records.map(r => r.date ? new Date(r.date).toLocaleDateString('vi-VN') : 'N/A');
-            
-            const systolicData = records.map(r => r.bloodPressure ? parseInt(r.bloodPressure.split('/')[0]) : null);
-            const diastolicData = records.map(r => r.bloodPressure ? parseInt(r.bloodPressure.split('/')[1]) : null);
-            const heartRateData = records.map(r => r.heartRate);
-            const sleepData = records.map(r => r.sleep);
-            const stepsData = records.map(r => r.steps);
-            const weightData = records.map(r => r.weight);
-            
-            // Vẽ biểu đồ Cân nặng
-            const weightCtx = document.getElementById('weightChart').getContext('2d');
-            weightChartInstance = new Chart(weightCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Cân nặng (kg)',
-                        data: weightData,
-                        borderColor: 'rgb(255, 159, 64)',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: true },
-                        title: { display: true, text: 'Biểu đồ Cân nặng', font: { size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
-                }
-            });
-
-
-
-
-
-
-
-
-
-// Biểu đồ Tâm thu (Systolic)
-const systolicCtx = document.getElementById('systolicChart').getContext('2d');
-systolicChartInstance = new Chart(systolicCtx, {
-    type: 'line',
-    data: {
-        labels: dates,
-        datasets: [{
-            label: 'Tâm thu (Systolic)',
-            data: systolicData,
-            borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1,
-            fill: false
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'bottom' },
-            title: { display: true, text: 'Biểu đồ Tâm thu', font: { size: 16 } }
-        },
-        scales: { y: { beginAtZero: false } }
+        });
     }
-});
 
-// Biểu đồ Tâm trương (Diastolic)
-const diastolicCtx = document.getElementById('diastolicChart').getContext('2d');
-diastolicChartInstance = new Chart(diastolicCtx, {
-    type: 'line',
-    data: {
-        labels: dates,
-        datasets: [{
-            label: 'Tâm trương (Diastolic)',
-            data: diastolicData,
-            borderColor: 'rgb(255, 99, 132)',
-            tension: 0.1,
-            fill: false
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'bottom' },
-            title: { display: true, text: 'Biểu đồ Tâm trương', font: { size: 16 } }
-        },
-        scales: { y: { beginAtZero: false } }
-    }
-});
+    // Tạo các biểu đồ line
+    systolicChartInstance = createLineChart('systolicChart', systolicData, 'rgb(75, 192, 192)', 'Biểu đồ Tâm thu');
+    diastolicChartInstance = createLineChart('diastolicChart', diastolicData, 'rgb(255, 99, 132)', 'Biểu đồ Tâm trương');
+    heartRateChartInstance = createLineChart('heartRateChart', heartRateData, 'rgb(54, 162, 235)', 'Biểu đồ Nhịp tim');
+    sleepChartInstance = createLineChart('sleepChart', sleepData, 'rgb(153, 102, 255)', 'Biểu đồ Giấc ngủ');
+    stepsChartInstance = createLineChart('stepsChart', stepsData, 'rgb(255, 159, 64)', 'Biểu đồ Bước chân');
+    weightChartInstance = createLineChart('weightChart', weightData, 'rgb(255, 206, 86)', 'Biểu đồ Cân nặng');
+}
 
 
 
 
-
-
-
-
-
-
-            // Vẽ biểu đồ Nhịp tim
-            const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
-            heartRateChartInstance = new Chart(heartRateCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Nhịp tim (bpm)',
-                        data: heartRateData,
-                        borderColor: 'rgb(54, 162, 235)',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Biểu đồ Nhịp tim', font: { size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
-                }
-            });
-
-            // Vẽ biểu đồ Giấc ngủ
-            const sleepCtx = document.getElementById('sleepChart').getContext('2d');
-            sleepChartInstance = new Chart(sleepCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Giấc ngủ (giờ)',
-                        data: sleepData,
-                        borderColor: 'rgb(153, 102, 255)',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Biểu đồ Giấc ngủ', font: { size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
-                }
-            });
-
-            // Vẽ biểu đồ Bước chân
-            const stepsCtx = document.getElementById('stepsChart').getContext('2d');
-            stepsChartInstance = new Chart(stepsCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Bước chân',
-                        data: stepsData,
-                        borderColor: 'rgb(255, 159, 64)',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Biểu đồ Bước chân', font: { size: 16 } }
-                    },
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
-                }
-            });
-        }
 
         // --- Event Listeners for Modals ---
         document.getElementById('change-password-btn').addEventListener('click', () => {
