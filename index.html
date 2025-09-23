@@ -253,6 +253,7 @@
                         <button data-id="${profile.id}" class="view-btn bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition duration-300 focus:outline-none"><i class="fas fa-eye"></i></button>
                         <button data-id="${profile.id}" class="edit-btn bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600 transition duration-300 focus:outline-none"><i class="fas fa-edit"></i></button>
                         <button data-id="${profile.id}" class="delete-btn bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition duration-300 focus:outline-none"><i class="fas fa-trash-alt"></i></button>
+			<button data-id="${profile.id}" class="export-pdf-btn bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition duration-300"><i class="fas fa-file-export"></i></button>
                     </div>
                 `;
                 profileList.appendChild(profileCard);
@@ -281,7 +282,21 @@
                 } else if (targetBtn.classList.contains('delete-btn')) {
                     profileToDeleteId = profileId;
                     deleteConfirmModal.classList.remove('hidden');
+               } else if (targetBtn.classList.contains('export-pdf-btn')) {
+    		    const profileToExport = profiles.find(p => p.id === profileId);
+
+                  // Hiển thị dữ liệu và vẽ chart trước
+                    currentProfileId = profileToExport.id;
+                    healthDataSection.classList.remove('hidden');
+                    listenForHealthData(currentProfileId);
+
+                  // Đợi 500ms cho Chart.js render xong rồi mới export
+                 setTimeout(() => {
+                   exportProfileToPDF(profileToExport);
+                }, 500);
                 }
+
+
             });
         }
 
@@ -305,7 +320,7 @@
                 renderProfiles(profiles);
             }, (error) => {
                 console.error("Lỗi khi lấy dữ liệu hồ sơ:", error);
-                showMessage("Không thể tải dữ liệu hồ sơ.");
+                //showMessage("Không thể tải dữ liệu hồ sơ.");
             });
         }
 
@@ -397,7 +412,7 @@
                 renderHealthData(records);
             }, (error) => {
                 console.error("Lỗi khi lấy dữ liệu sức khỏe:", error);
-                showMessage("Không thể tải dữ liệu sức khỏe.");
+                //showMessage("Không thể tải dữ liệu sức khỏe.");
             });
         }
 
@@ -636,7 +651,91 @@
         document.getElementById('cancel-add-account').addEventListener('click', () => hideModal('add-account-modal'));
         document.getElementById('cancel-profile-btn').addEventListener('click', () => hideModal('profile-modal'));
         document.getElementById('cancel-delete-btn').addEventListener('click', () => hideModal('delete-confirm-modal'));
+
+async function exportProfileToPDF(profile) {
+    try {
+        showLoading(true);
+
+        // 1. Lấy dữ liệu healthRecords từ Firestore
+        const q = query(collection(db, 'healthRecords'), where("profileId", "==", profile.id));
+        const querySnapshot = await getDocs(q);
+
+        const healthRecords = [];
+        querySnapshot.forEach(doc => {
+            healthRecords.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sắp xếp theo ngày
+        healthRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // 2. Tạo nội dung text trước
+        const content = [
+            { text: 'HỒ SƠ NGƯỜI DÙNG', style: 'header' },
+            { text: `Họ tên: ${profile.name}\nTuổi: ${profile.age}\nĐịa chỉ: ${profile.address}\nGhi chú: ${profile.notes || 'Không có'}\nNgười tạo: ${profile.creatorEmail}\n\n`, style: 'subheader' },
+            { text: 'DỮ LIỆU SỨC KHỎE', style: 'header' }
+        ];
+
+        healthRecords.forEach((rec, i) => {
+            content.push({
+                text: `#${i + 1} - Ngày: ${rec.date}
+  Cân nặng: ${rec.weight || 'N/A'} kg
+  Huyết áp: ${rec.bloodPressure || 'N/A'}
+  Nhịp tim: ${rec.heartRate || 'N/A'} bpm
+  Giấc ngủ: ${rec.sleep || 'N/A'} giờ
+  Bước chân: ${rec.steps || 'N/A'}
+  Ghi chú: ${rec.notes || 'Không có'}\n\n`,
+                style: 'normal'
+            });
+        });
+
+        // 3. Thêm biểu đồ (nếu có hiển thị trên web)
+        const charts = [
+            { id: "weightChart", title: "Biểu đồ Cân nặng" },
+            { id: "bpChart", title: "Biểu đồ Huyết áp" },
+            { id: "heartRateChart", title: "Biểu đồ Nhịp tim" },
+            { id: "sleepChart", title: "Biểu đồ Giấc ngủ" },
+            { id: "stepsChart", title: "Biểu đồ Bước chân" }
+        ];
+
+        for (const chart of charts) {
+            const canvas = document.getElementById(chart.id);
+            if (canvas) {
+                const imgData = canvas.toDataURL("image/png");
+                content.push({ text: chart.title, style: "header" });
+                content.push({ image: imgData, width: 500, margin: [0, 10, 0, 20] });
+            }
+        }
+
+        // 4. Định nghĩa PDF
+        const docDefinition = {
+            content: content,
+            styles: {
+                header: { fontSize: 16, bold: true, margin: [0, 10, 0, 5] },
+                subheader: { fontSize: 12, margin: [0, 5, 0, 5] },
+                normal: { fontSize: 11 }
+            },
+            defaultStyle: {
+                font: 'Roboto' // pdfmake có Roboto hỗ trợ Unicode
+            }
+        };
+
+        // 5. Xuất file PDF
+        pdfMake.createPdf(docDefinition).download(`profile_${profile.id}.pdf`);
+        showMessage("Xuất PDF thành công!");
+    } catch (error) {
+        console.error("Export PDF failed:", error);
+        showMessage("Xuất PDF thất bại.");
+    } finally {
+        showLoading(false);
+    }
+}
+
+
     </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
 </head>
 <body class="bg-gray-100 min-h-screen font-sans antialiased text-gray-800">
     <!-- Header chính (chỉ hiển thị khi đã đăng nhập) -->
@@ -822,5 +921,8 @@
             </div>
         </div>
     </div>
+
+
+
 </body>
 </html>
