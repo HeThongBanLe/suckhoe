@@ -753,13 +753,36 @@ async function exportProfileToPDF(profile) {
         showLoading(false);
     }
 }
-
-
-    </script>
-
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<style>
+/* wrapper cho từng canvas */
+.chart-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden; /* không cho tràn ngoài viewport */
+}
 
+/* canvas co giãn theo chiều ngang, cao vừa đủ */
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 280px !important; /* mobile */
+  display: block;
+}
+
+/* trên màn to, tăng chiều cao */
+@media (min-width: 768px) {
+  .chart-wrapper canvas { height: 360px !important; }
+}
+</style>
+
+
+
+
+
+
+	
 </head>
 <body class="bg-gray-100 min-h-screen font-sans antialiased text-gray-800">
     <!-- Header chính (chỉ hiển thị khi đã đăng nhập) -->
@@ -964,6 +987,7 @@ async function exportProfileToPDF(profile) {
 
 </body>
 </html>
+
 
 
 
