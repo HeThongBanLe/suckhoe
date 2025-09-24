@@ -23,16 +23,20 @@
             appId: "1:752106860226:web:a245b5daedab3b0aca155b",
             measurementId: "G-38JCCTKRGM"
         };
-        
+   
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
         import { 
             getAuth, 
             signInWithEmailAndPassword, 
             signOut, 
             onAuthStateChanged, 
             updatePassword, 
-            createUserWithEmailAndPassword 
+            createUserWithEmailAndPassword,
+	    sendPasswordResetEmail
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
         import { 
             getFirestore, 
             collection, 
@@ -725,7 +729,33 @@ async function exportProfileToCSV(profile) {
     }
 }
 
+// Thêm event listener cho liên kết "Quên mật khẩu"
+// Thêm event listener cho liên kết "Quên mật khẩu"
+document.getElementById('forgot-password-link').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
 
+    // Kiểm tra xem email có được nhập hay không
+    if (!email) {
+        showMessage("Vui lòng nhập email của bạn vào ô đăng nhập để nhận link khôi phục.");
+        return;
+    }
+
+    showLoading();
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showMessage("Một email khôi phục mật khẩu đã được gửi đến " + email + ". Vui lòng kiểm tra hộp thư của bạn.");
+    } catch (error) {
+        let errorMessage = "Không thể gửi email khôi phục mật khẩu. Vui lòng thử lại.";
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = "Email này không tồn tại trong hệ thống. Vui lòng kiểm tra lại.";
+        }
+        showMessage(errorMessage);
+        console.error("Password reset failed:", error);
+    } finally {
+        showLoading(false);
+    }
+});
 
 
 </script>
@@ -779,6 +809,7 @@ async function exportProfileToCSV(profile) {
         <!-- Biểu mẫu đăng nhập -->
         <div id="login-form" class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-md mx-auto">
             <h2 class="text-4xl font-extrabold text-center text-indigo-600 mb-8">Đăng Nhập</h2>
+	    <a id="forgot-password-link" href="#" class="text-sm text-blue-600 hover:text-blue-500 float-right mt-2">Quên mật khẩu?</a>
             <form>
                 <div class="mb-5">
                     <label for="login-email" class="block text-gray-700 font-semibold mb-2">Email</label>
