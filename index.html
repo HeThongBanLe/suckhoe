@@ -267,7 +267,9 @@ function renderProfiles(profiles) {
     // Hiển thị danh sách hồ sơ đã được lọc
     filteredProfiles.forEach(profile => {
         const profileCard = document.createElement('div');
-        profileCard.className = 'flex-shrink-0 bg-white p-6 rounded-xl shadow-md flex flex-col justify-between w-full sm:w-64 min-h-64 cursor-pointer hover:shadow-lg transition-shadow duration-300';
+        profileCard.className = 'flex-shrink-0 bg-white p-6 rounded-xl shadow-md flex flex-col justify-between w-full sm:w-64 min-h-[16rem] cursor-pointer hover:shadow-lg hover:scale-110 transition-transform transition-shadow duration-300';
+
+
         profileCard.innerHTML = `
             <div>
                 <h3 class="text-xl font-bold text-indigo-600 mb-2">${profile.name}</h3>
@@ -308,7 +310,7 @@ function renderProfiles(profiles) {
 
             // Cập nhật tiêu đề với tên hồ sơ đã chọn
             if (profileToView) {
-                profileNameDisplay.textContent = ` Dữ liệu sức khỏe của: ${profileToView.name}`;
+                profileNameDisplay.textContent = `Dữ liệu sức khỏe của: ${profileToView.name} - ${profileToView.age} tuổi - ${profileToView.address}`;
             }
 
             listenForHealthData(currentProfileId);
@@ -813,21 +815,16 @@ document.getElementById('forgot-password-link').addEventListener('click', async 
 </style>
 
 
-
-
-
-
-	
 </head>
 <body class="bg-gray-100 min-h-screen font-sans antialiased text-gray-800">
     <!-- Header chính (chỉ hiển thị khi đã đăng nhập) -->
-<header id="main-header" class="hidden fixed top-0 left-0 w-full bg-indigo-600 text-white shadow-md p-2 z-10">
+<header id="main-header" class="hidden fixed top-0 left-0 w-full bg-[#34495e] text-white shadow-md p-2 z-10">
   <div class="container mx-auto flex justify-end">
     <div class="flex items-center space-x-2">
-      <button id="add-profile-btn" class="bg-blue-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-blue-600 transition">Thêm Hồ Sơ</button>
-      <button id="change-password-btn" class="bg-yellow-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-yellow-600 transition">Đổi Mật Khẩu</button>
-      <button id="logout-btn" class="bg-red-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-red-600 transition">Đăng Xuất</button>
-      <button id="add-user-btn" class="bg-green-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-green-600 transition hidden">Thêm Tài Khoản</button>
+      <button id="add-profile-btn" class="bg-blue-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-blue-200 transition">Thêm Hồ Sơ</button>
+      <button id="change-password-btn" class="bg-yellow-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-yellow-200 transition">Đổi Mật Khẩu</button>
+      <button id="logout-btn" class="bg-red-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-red-200 transition">Đăng Xuất</button>
+      <button id="add-user-btn" class="bg-green-500 text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-green-200 transition hidden">Thêm Tài Khoản</button>
     </div>
   </div>
 </header>
@@ -869,7 +866,7 @@ document.getElementById('forgot-password-link').addEventListener('click', async 
         <!-- Section nhập liệu sức khỏe -->
         <div id="health-data-section" class="hidden mt-8 p-8 bg-white rounded-xl shadow-2xl w-full">
             <div class="flex justify-between items-center mb-6">
-			   <h4 id="profile-name-display" class="text-3xl font-bold text-indigo-600 mb-4 text-center">G</h4>
+	        <h4 id="profile-name-display" class="text-3xl font-bold text-indigo-600 mb-4 text-center">G</h4>
                 <button id="close-health-data-btn" class="text-gray-500 hover:text-gray-700 transition duration-300">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
@@ -914,10 +911,11 @@ document.getElementById('forgot-password-link').addEventListener('click', async 
                   placeholder="Thêm ghi chú..."></textarea>
     </div>
     <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
-        <button type="submit"
-                class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
+		 <button type="submit"
+                class="bg-indigo-600 text-white font-bold py-1 px-8 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
             Lưu
-        </button>
+        </button>       
+
     </div>
 </form>
 
