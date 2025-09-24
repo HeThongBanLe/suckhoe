@@ -300,6 +300,7 @@
                   // Đợi 500ms cho Chart.js render xong rồi mới export
                  setTimeout(() => {
                    exportProfileToPDF(profileToExport);
+		   exportProfileToCSV(profileToExport);
                 }, 500);
                 }
 
@@ -664,6 +665,69 @@ async function exportProfileToPDF(profile) {
         showLoading(false);
     }
 }
+
+
+
+
+async function exportProfileToCSV(profile) {
+    try {
+        showLoading(true);
+
+        const q = query(collection(db, 'healthRecords'), where("profileId", "==", profile.id));
+        const querySnapshot = await getDocs(q);
+
+        const healthRecords = [];
+        querySnapshot.forEach(doc => {
+            healthRecords.push({ id: doc.id, ...doc.data() });
+        });
+
+        // 1. Tạo chuỗi CSV với thông tin hồ sơ
+        let csvContent = "";
+        csvContent += `Họ tên: ${profile.name}\n`;
+        csvContent += `Tuổi: ${profile.age}\n`;
+        csvContent += `Nơi ở: ${profile.address}\n`;
+        csvContent += `Ghi chú: "${profile.notes || 'Không có'}"\n\n`; // Thêm ghi chú hồ sơ
+
+        // 2. Thêm tiêu đề cột và dữ liệu sức khỏe
+        const headers = ["Ngày", "Cân nặng (kg)", "Huyết áp", "Nhịp tim (bpm)", "Giấc ngủ (giờ)", "Bước chân", "Ghi chú"];
+        csvContent += headers.join(",") + "\n";
+
+        healthRecords.forEach(rec => {
+            const date = rec.date || '';
+            const weight = rec.weight || '';
+            const bp = rec.bloodPressure || '';
+            const hr = rec.heartRate || '';
+            const sleep = rec.sleep || '';
+            const steps = rec.steps || '';
+            const notes = rec.notes ? `"${rec.notes.replace(/"/g, '""')}"` : '';
+
+            const row = [date, weight, bp, hr, sleep, steps, notes].join(",");
+            csvContent += row + "\n";
+        });
+
+        // 3. Tạo và tải xuống file CSV (sửa lỗi font bằng cách thêm '\ufeff')
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        const filename = `${profile.name.replace(/\s/g, '')}_${profile.age}.csv`;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showMessage("Xuất CSV thành công!");
+
+    } catch (error) {
+        console.error("Export CSV failed:", error);
+        showMessage("Xuất CSV thất bại.");
+    } finally {
+        showLoading(false);
+    }
+}
+
+
+
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
